@@ -4,3 +4,5 @@ A simple UI to display real-time network stats for Mirror Networking Library(Uni
 - Averages and displays recent network output
 - Displays latency to client
 - Displays quantity of connected clients to the server
+
+![preview](https://github.com/mrsafacon/MirrorNetworkStatsUI/raw/master/profiler-preview.png)
