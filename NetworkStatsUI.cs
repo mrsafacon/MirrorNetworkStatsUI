@@ -4,6 +4,12 @@ using Mirror;
 using UnityEngine.UI;
 
 public class NetworkStatsUI : MonoBehaviour {
+    public static NetworkStatsUI instance;
+
+    public static void Toggle(bool enabled){
+        if(instance != null) instance.enabled = enabled;
+    }
+
     Text text; //optional UI element
     string data;
 
@@ -17,6 +23,7 @@ public class NetworkStatsUI : MonoBehaviour {
 
     void Awake() {
         text = GetComponent<Text>();
+        instance = this;
     }
 
     void Start() {
@@ -31,6 +38,11 @@ public class NetworkStatsUI : MonoBehaviour {
     }
 
     void Update() {
+        if(!Mirror.NetworkServer.active && !Mirror.NetworkClient.active){
+            data = "Network Not Connected.";
+            if(text != null) text.text = data;
+        }
+
         if (nextUpdate < Time.realtimeSinceStartup) {
             //add to lists
             recentIn.Add(thisSecondIn);
@@ -57,22 +69,28 @@ public class NetworkStatsUI : MonoBehaviour {
             data = "kBps in: " +  (inFloat.ToString("n2")) + System.Environment.NewLine;
             data += "kBps out: " + (outFloat.ToString("n2")) + System.Environment.NewLine;
 
-            //set UI
-            if(text != null) text.text = data;
-
             thisSecondIn = 0;
             thisSecondOut = 0;
 
-            if (NetworkClient.isConnected) {
+            if (NetworkServer.active) {
+                //server shows quantity of connected clients
+                data += "connections: " + NetworkServer.connections.Count;
+            } else if (NetworkClient.isConnected) {
                 //client shows latency
                 string s = Mathf.RoundToInt(((float)NetworkTime.rtt) * 1000).ToString();
-                text.text += "latency: " + s + System.Environment.NewLine;
-            } else if (NetworkServer.active) {
-                //server shows quantity of connected clients
-                text.text += "connections: " + NetworkServer.connections.Count;
+                data += "latency: " + s + System.Environment.NewLine;
             }
+
+            //set UI
+            if(text != null) text.text = data;
+
             nextUpdate = Time.realtimeSinceStartup + 1f;
         }
+    }
+
+    void OnDisable(){
+        data = "";
+        if(text != null) text.text = "";
     }
 
     public void input(NetworkDiagnostics.MessageInfo info) {
